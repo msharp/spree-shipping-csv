@@ -19,7 +19,7 @@ class Admin::ShippingdocsController < Admin::BaseController
     
     @orders = Order.find(:all, :conditions => { :created_at => @dateStart..@dateEnd, :state => 'complete' })
 
-    csv_string = FasterCSV.generate do |csv|
+    csv_string = FasterCSV.generate({:force_quotes => true}) do |csv|
         # header row
         csv << [
             "Order",
