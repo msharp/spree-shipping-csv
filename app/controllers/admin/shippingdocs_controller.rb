@@ -2,34 +2,56 @@ require 'fastercsv'
 
 class Admin::ShippingdocsController < Admin::BaseController
   def index
+
+    # TODO _ parse date according to locale setting
+      
     if params[:start] == "" then
-      @dateStart = DateTime.strptime('1/1/1980', "%m/%d/%Y")
+      @dateStart = DateTime.strptime('1980/1/1', "%Y/%m/%d")
     else
-      @dateStart = DateTime.strptime(params[:start], "%m/%d/%Y")
+      @dateStart = DateTime.strptime(params[:start], "%Y/%m/%d")
     end
 
     if params[:end] == "" then
-      @dateEnd = DateTime.strptime('1/1/3000', "%m/%d/%Y")
+      @dateEnd = DateTime.strptime('3000/1/1', "%Y/%m/%d")
     else
-      @dateEnd = DateTime.strptime(params[:end], "%m/%d/%Y")
+      @dateEnd = DateTime.strptime(params[:end], "%Y/%m/%d")
     end
     
-    @orders = Order.find(:all, :conditions => { :created_at => @dateStart..@dateEnd })
+    @orders = Order.find(:all, :conditions => { :created_at => @dateStart..@dateEnd, :state => 'complete' })
 
     csv_string = FasterCSV.generate do |csv|
-      # header row
-      csv << ["id", "billing_first_name", "billing_last_name", "billing_address_1", "billing_address_2", "billing_city", "billing_state", "billing_zip",
-        "shipping_first_name", "shipping_last_name", "shipping_address_1", "shipping_address_2", "shipping_city", "shipping_state",
-        "shipping_zip", "weight", "email"]
+        # header row
+        csv << [
+            "order_number", 
+            "order_date", 
+            "order_total", 
+            "billing_first_name", 
+            "billing_last_name", 
+            "billing_address_1", 
+            "billing_address_2", 
+            "billing_city", 
+            "billing_state", 
+            "billing_zip",
+            "shipping_first_name", 
+            "shipping_last_name", 
+            "shipping_address_1", 
+            "shipping_address_2", 
+            "shipping_city", 
+            "shipping_state",
+            "shipping_zip", 
+            "weight", 
+            "email", 
+            "payment_state", 
+            "shipment_state", 
+            "special_instructions", 
+            "products_ordered" 
+        ]
       
       # data rows
       @orders.each do |order|
-        @checkout = Checkout.find(:first, :conditions => {:order_id => order.id})
 
         if order.state == 'in_progress' then
         else
-          @billAddress = Address.find(:first, :conditions => {:id => @checkout.bill_address_id})
-          @shipAddress = Address.find(:first, :conditions => {:id => @checkout.ship_address_id})
           @shipmentWeight = 0
           order.line_items.each do |item|
             if item.variant.weight.nil? then
@@ -37,10 +59,32 @@ class Admin::ShippingdocsController < Admin::BaseController
               @shipmentWeight += item.variant.weight
             end
           end
-            csv << [order.id, @billAddress.firstname,@billAddress.lastname, @billAddress.address1, @billAddress.address2, @billAddress.city,
-              State.find(:first, :conditions => { :id =>@billAddress.state_id}).abbr, @billAddress.zipcode,
-              @shipAddress.firstname,@shipAddress.lastname, @shipAddress.address1, @shipAddress.address2,  @shipAddress.city ,
-              State.find(:first, :conditions => { :id => @shipAddress.state_id}).abbr, @shipAddress.zipcode, @shipmentWeight, @checkout.email]
+          csv << [
+              order.number, 
+              order.completed_at, 
+              order.total, 
+              order.bill_address.firstname, 
+              order.bill_address.lastname, 
+              order.bill_address.address1, 
+              order.bill_address.address2, 
+              order.bill_address.city,
+              State.find(:first, :conditions => { :id =>order.bill_address.state_id}).abbr, 
+              order.bill_address.zipcode,
+              order.ship_address.firstname, 
+              order.ship_address.lastname, 
+              order.ship_address.address1, 
+              order.ship_address.address2, 
+              order.ship_address.city ,
+              State.find(:first, :conditions => { :id => order.ship_address.state_id}).abbr, 
+              order.ship_address.zipcode, 
+              @shipmentWeight, 
+              order.email, 
+              order.payment_state, 
+              order.shipment_state, 
+              order.special_instructions, 
+              ordered_items(order)
+          ]
+            
         end
 
        end
@@ -51,5 +95,15 @@ class Admin::ShippingdocsController < Admin::BaseController
             :type => 'text/csv; charset=iso-8859-1; header=present',
             :disposition => "attachment; filename=users.csv"
   end
+
+  def ordered_items(order)
+    items = ""
+    for item in order.line_items do 
+      items << "#{item.variant.sku} #{item.variant.product.name} #{item.variant.options_text} (#{item.quantity})
+"             
+    end
+    items
+  end
+
 end
 
