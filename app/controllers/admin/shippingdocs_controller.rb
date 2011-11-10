@@ -1,23 +1,22 @@
 require 'fastercsv'
 
 class Admin::ShippingdocsController < Admin::BaseController
+  include ActionView::Helpers::TextHelper
   def index
 
-    # TODO _ parse date according to locale setting
-      
-    if params[:start] == "" then
-      @dateStart = DateTime.strptime('1980/1/1', "%Y/%m/%d")
-    else
-      @dateStart = DateTime.strptime(params[:start], "%Y/%m/%d")
+    date_end = Time.new
+    date_start = date_end - (60 * 24 * 7)
+
+    # parse date according to locale setting
+    if !params[:start].blank?
+      date_start = Time.zone.parse(params[:start]).beginning_of_day rescue ""
     end
 
-    if params[:end] == "" then
-      @dateEnd = DateTime.strptime('3000/1/1', "%Y/%m/%d")
-    else
-      @dateEnd = DateTime.strptime(params[:end], "%Y/%m/%d")
+    if !params[:end].blank?
+        date_end = Time.zone.parse(params[:end]).end_of_day rescue ""
     end
-    
-    @orders = Order.find(:all, :conditions => { :created_at => @dateStart..@dateEnd, :state => 'complete' })
+   
+    @orders = Order.find(:all, :conditions => { :created_at => date_start..date_end, :state => 'complete' })
 
     csv_string = FasterCSV.generate({:force_quotes => true}) do |csv|
         # header row
@@ -76,14 +75,16 @@ class Admin::ShippingdocsController < Admin::BaseController
                     order.ship_address.zipcode, 
                     "",
                     order.email
-                ]
-
+                ].map{|s| s.is_a?(String) ? s[0..39] : s}
 
                 item.quantity.times do
                     csv << csv_line
                 end
             end     
         end
+        
+        
+
     end
 
     # send it to the browsah
