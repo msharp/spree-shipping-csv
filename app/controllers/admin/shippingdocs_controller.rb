@@ -34,7 +34,7 @@ class Admin::ShippingdocsController < Admin::BaseController
     # send it to the browsah
     send_data csv_string,
         :type => 'text/csv; charset=iso-8859-1; header=present',
-        :disposition => "attachment; filename=users.csv"
+        :disposition => "attachment; filename=orders_#{Time.now.strftime("%Y%M%d%H%M")}.csv"
   end
 
 end
