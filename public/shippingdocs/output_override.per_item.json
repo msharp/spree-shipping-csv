@@ -1,0 +1,43 @@
+{
+"output_mode": "per_item",
+"csv_header_row":[
+    "Order",	
+    "DateCompleted",	
+    "ProductSKU",	
+    "ProductName",	
+    "Quantity",	
+    "Price",	
+    "Freight",	
+    "SubTotal",	
+    "CartStatus",	
+    "ShipFirstName",	
+    "ShipLastName",	
+    "ShipCompany",	
+    "ShipAddress",	
+    "ShipAddress2",	
+    "ShipCity",	
+    "ShipState",	
+    "ShipZip",	
+    "ShipPhone"
+],
+"csv_line_item_row":[
+    "order.number",
+    "order.completed_at",
+    "item.variant.sku",
+    "item.variant.product.name",
+    "1",
+    "item.price",
+    "",
+    "item.quantity * item.price",
+    "order.payment_state",
+    "order.ship_address.firstname",
+    "order.ship_address.lastname",
+    "",
+    "order.ship_address.address1",
+    "order.ship_address.address2",
+    "order.ship_address.city ",
+    "get_ship_state(order)",
+    "order.ship_address.zipcode",
+    "order.ship_address.phone"
+   ]
+}

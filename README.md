@@ -2,14 +2,24 @@ This extension will add a CSV export button to the admin orders page that allows
 
 To install, add to Gemfile:
 
-	gem 'shipping_csv', :git => 'git://github.com/msharp/spree-shipping-csv.git', :branch => '0.60.x'
+	gem 'shipping_csv', :git => 'git://github.com/msharp/spree-shipping-csv.git'
 
 And update your bundle:
 
 	bundle update
 
-If you want to alter the output of the CSV file, define your own methods in 
+To alter the output of the CSV file, you can define custom output format in:
+    
+    {Rails.root}/public/shippingdocs/output_override.json
 
-    /app/helpers/admin/shippingdocs_helper.rb
+This allows 3 modes of output:
+    
+    :order          # 1 line per order
+    :line_item      # 1 line per line item
+    :per_item       # 1 line per ordered item
 
+Examples are available in this extension.
 
+TODO 
+    - more information here about how to customise the output.
+    - tests (at least for output format file)
